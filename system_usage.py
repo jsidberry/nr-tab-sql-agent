@@ -87,21 +87,18 @@ def push_data_to_csv_file(csv_file, content):
 
 
 def write_to_database(hostname,epoch_start_time,epoch_end_time,start_time,end_time,cpu_avg,mem_avg,disk_avg):
-    server = '0.0.0.0,1433' 
-    database = 'TestDB' 
-    username = 'SA' 
-    password = '24652@MSsql' 
-    cnxn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER='+server+';DATABASE='+database+';UID='+username+';PWD='+password)
-    cursor = cnxn.cursor()
-    # {hostname},{epoch_start_time},{epoch_end_time},{start_time},{end_time},{cpu_avg},{mem_avg},{disk_avg}
-    
-    if cursor.tables(table='tableau_system_usage', tableType='TABLE').fetchone():
-        cursor.execute(
-            f"INSERT INTO [tableau_system_usage] ([hostname],[epoch_start_time],[epoch_end_time],[start_time],[end_time],[cpu_avg],[mem_avg],[disk_avg]) VALUES ('{hostname}','{epoch_start_time}','{epoch_end_time}','{start_time}','{end_time}','{cpu_avg}','{mem_avg}','{disk_avg}')"
-        )
+    server   = '0.0.0.0,1433' 
+    database = config.db_name 
+    username = config.db_user 
+    password = config.db_pass 
+    conn     = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER='+server+';DATABASE='+database+';UID='+username+';PWD='+password)
+    cursor   = conn.cursor()
+    data_insert_statement = f"INSERT INTO [{config.db_table}] ([hostname],[epoch_start_time],[epoch_end_time],[start_time],[end_time],[cpu_avg],[mem_avg],[disk_avg]) VALUES ('{hostname}','{epoch_start_time}','{epoch_end_time}','{start_time}','{end_time}','{cpu_avg}','{mem_avg}','{disk_avg}')"
+    if cursor.tables(table=config.db_table, tableType='TABLE').fetchone():
+        cursor.execute(data_insert_statement)
     else:
-        cursor.execute('''
-            CREATE TABLE tableau_system_usage(
+        cursor.execute(f'''
+            CREATE TABLE {config.db_table}(
                 hostname varchar(16),
                 epoch_start_time int,
                 epoch_end_time int,
@@ -113,29 +110,26 @@ def write_to_database(hostname,epoch_start_time,epoch_end_time,start_time,end_ti
             )
             '''
         )
-        cursor.execute(
-            f"INSERT INTO [tableau_system_usage] ([hostname],[epoch_start_time],[epoch_end_time],[start_time],[end_time],[cpu_avg],[mem_avg],[disk_avg]) VALUES ('{hostname}','{epoch_start_time}','{epoch_end_time}','{start_time}','{end_time}','{cpu_avg}','{mem_avg}','{disk_avg}')"
-        )
+        cursor.execute(data_insert_statement)
         
-    cnxn.commit()
+    conn.commit()
     cursor.close()
-    cnxn.close()
+    conn.close()
 
 
 def main():
     num_hrs       = 24  #  1 day
     query_key     = config.query_key
     account_id    = config.account_id
+    init_start    = int(yesterday_midnight_init_start_date_time())
+    init_end      = str(int(init_start) + 3600) # Sunday, January 31, 2021 7:00:00 PM GMT-05:00
+    now           = f"{datetime.now():%Y-%m-%d-%H%M}"
     entity_ids    = (
         ("AZUPWTABGW01", 8634054696753406258), 
         ("AZUPWTABWRK06", 7674407372321415153), 
         ("AZUPWTABWRK07", 7003032567755051516), 
         ("AZUPWTABWRK08", 5256329454637754366)
     )
-
-    init_start = int(yesterday_midnight_init_start_date_time())
-    init_end   = str(int(init_start) + 3600) # Sunday, January 31, 2021 7:00:00 PM GMT-05:00
-    now        = f"{datetime.now():%Y-%m-%d-%H%M}"
 
     for hostname, entity_id in entity_ids:
         csv_filename = f"cpu_avg_{now}_{hostname}.csv"
