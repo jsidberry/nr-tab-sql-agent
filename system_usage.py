@@ -53,6 +53,39 @@ def parse_json_object(cmd):
         print(error)
 
 
+def push_data_to_csv_file(csv_file, content):
+    """
+    This pushes data into a CSV file for human-readable use,
+    loops through time-series data and parses to individual values,
+    writing each line to the csv file one at a time
+    """
+    try:
+        hostname  = content['facets'][0]['name']
+        for data in content['facets'][0]['timeSeries']:
+            epoch_start_time = data['beginTimeSeconds']
+            epoch_end_time   = data['endTimeSeconds']
+            start_time       = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(data['beginTimeSeconds']))
+            end_time         = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(data['endTimeSeconds']))
+            cpu_avg          = data['results'][0]['average']
+            mem_avg          = data['results'][1]['average']
+            disk_avg         = data['results'][2]['average']
+            if cpu_avg  == 'None' or cpu_avg == None:
+                cpu_avg = 0
+            if mem_avg  == 'None' or mem_avg == None:
+                mem_avg = 0
+            if disk_avg == 'None' or disk_avg == None:
+                disk_avg = 0
+            
+            csv_file.write(f'{hostname},{epoch_start_time},{epoch_end_time},{start_time},{end_time},{cpu_avg},{mem_avg},{disk_avg}\n')
+            write_to_database(hostname,epoch_start_time,epoch_end_time,start_time,end_time,cpu_avg,mem_avg,disk_avg)
+        time.sleep(2)
+        
+    except IndexError:
+        print(hostname, 'not available...', '\n')
+    except KeyError:
+        print(hostname, 'not available...', '\n')
+
+
 def main():
     num_hrs       = 24  #  1 day
     query_key     = config.query_key
