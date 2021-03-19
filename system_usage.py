@@ -86,6 +86,42 @@ def push_data_to_csv_file(csv_file, content):
         print(hostname, 'not available...', '\n')
 
 
+def write_to_database(hostname,epoch_start_time,epoch_end_time,start_time,end_time,cpu_avg,mem_avg,disk_avg):
+    server = '0.0.0.0,1433' 
+    database = 'TestDB' 
+    username = 'SA' 
+    password = '24652@MSsql' 
+    cnxn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};SERVER='+server+';DATABASE='+database+';UID='+username+';PWD='+password)
+    cursor = cnxn.cursor()
+    # {hostname},{epoch_start_time},{epoch_end_time},{start_time},{end_time},{cpu_avg},{mem_avg},{disk_avg}
+    
+    if cursor.tables(table='tableau_system_usage', tableType='TABLE').fetchone():
+        cursor.execute(
+            f"INSERT INTO [tableau_system_usage] ([hostname],[epoch_start_time],[epoch_end_time],[start_time],[end_time],[cpu_avg],[mem_avg],[disk_avg]) VALUES ('{hostname}','{epoch_start_time}','{epoch_end_time}','{start_time}','{end_time}','{cpu_avg}','{mem_avg}','{disk_avg}')"
+        )
+    else:
+        cursor.execute('''
+            CREATE TABLE tableau_system_usage(
+                hostname varchar(16),
+                epoch_start_time int,
+                epoch_end_time int,
+                start_time varchar(20),
+                end_time varchar(20),
+                cpu_avg int,
+                mem_avg int,
+                disk_avg int
+            )
+            '''
+        )
+        cursor.execute(
+            f"INSERT INTO [tableau_system_usage] ([hostname],[epoch_start_time],[epoch_end_time],[start_time],[end_time],[cpu_avg],[mem_avg],[disk_avg]) VALUES ('{hostname}','{epoch_start_time}','{epoch_end_time}','{start_time}','{end_time}','{cpu_avg}','{mem_avg}','{disk_avg}')"
+        )
+        
+    cnxn.commit()
+    cursor.close()
+    cnxn.close()
+
+
 def main():
     num_hrs       = 24  #  1 day
     query_key     = config.query_key
