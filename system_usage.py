@@ -39,6 +39,20 @@ def run_curl_command(entity_id, init_starttime, init_endtime, query_key, account
     return command 
 
 
+def parse_json_object(cmd):
+    """ 
+    Returns a JSON Object from the cURL command using New Relic API
+    """
+    try:
+        proc       = subprocess.Popen([cmd], stdout=subprocess.PIPE, shell=True)
+        (out, err) = proc.communicate()
+        results    = json.loads(out)
+        return results
+    except Exception as error:
+        # to only catch any other exception
+        print(error)
+
+
 def main():
     num_hrs       = 24  #  1 day
     query_key     = config.query_key
