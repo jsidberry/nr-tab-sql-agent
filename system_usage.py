@@ -32,6 +32,13 @@ def calculate_time_intervals(time_block, init_start, init_end):
     return init_starttime, init_endtime
 
 
+def run_curl_command(entity_id, init_starttime, init_endtime, query_key, account_id):
+    NRQL_ALL = f'SELECT average(cpuPercent), average(memoryUsedPercent), average(diskUsedPercent) FROM SystemSample FACET hostname WHERE entityId = {entity_id} SINCE {init_starttime} UNTIL {init_endtime} TIMESERIES'.replace(" ", "%20")
+    command  = f"curl -H 'Accept: application/json' -H 'X-Query-Key: {query_key}' 'https://insights-api.newrelic.com/v1/accounts/{account_id}/query?nrql={NRQL_ALL}'"
+    print()
+    return command 
+
+
 def main():
     num_hrs       = 24  #  1 day
     query_key     = config.query_key
