@@ -1,0 +1,10 @@
+certifi==2020.12.5
+chardet==4.0.0
+idna==2.10
+mysql-connector-python==8.0.23
+newrelic-telemetry-sdk==0.4.2
+protobuf==3.15.3
+pyodbc==4.0.30
+requests==2.25.1
+six==1.15.0
+urllib3==1.26.3
