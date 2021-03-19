@@ -1,0 +1,7 @@
+*.pyc
+*.log
+config.py
+variables.py
+*.csv
+*.xl*
+__pycache__/*
