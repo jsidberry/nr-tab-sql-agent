@@ -17,12 +17,19 @@ import xml.etree.ElementTree as ET
 
 
 def yesterday_midnight_init_start_date_time():
-    print("Get the current date-time in epoch to 10-digits.")
+    # ensure each call starts at midnight the previous day
     dt                       = date.today()
     midnight                 = datetime.combine(dt, datetime.min.time())
     yesterday_midnight       = midnight - timedelta(days=1, seconds=7200)
     yesterday_epoch_midnight = datetime.timestamp(yesterday_midnight)
     return int(yesterday_epoch_midnight)
+
+
+def calculate_time_intervals(time_block, init_start, init_end):
+    interval       = 3600 - (3600 * time_block)
+    init_starttime = int(init_start) + int(interval)
+    init_endtime   = int(init_end) + int(interval)
+    return init_starttime, init_endtime
 
 
 def main():
